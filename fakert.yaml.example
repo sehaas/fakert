@@ -1,0 +1,9 @@
+network:
+    2001:db8::/64
+
+routes:
+    2001:db8::c0:ffee:
+    - 2001:db8::aaaa
+    - 2001:db8::bbbb
+    - 2001:db8::cccc
+    - 2001:db8::c0:ffee
