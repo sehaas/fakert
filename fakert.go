@@ -155,7 +155,7 @@ func main() {
 		destIP := FakeIP(packet[24:40])
 		hops := c.Routes[destIP]
 		TTL := int(packet[7])
-		log.Printf("dest: %s | src: %s | TTL: %d | type: %d", destIP, FakeIP(packet[8:24]), TTL, packetType)
+		log.Printf("dest: %s | src: %s | TTL: %d | type: %d | plen: %d", destIP, FakeIP(packet[8:24]), TTL, packetType, plen)
 
 		// Handle ICMP Hop limit expired
 		returnpacket := make([]byte, plen+8+40)
@@ -179,10 +179,12 @@ func main() {
 				// for windows or traceroute6 -I
 				returnpacket[40] = 0x81 // Echo Reply
 				returnpacket[41] = 0x00 // no error
+				copy(returnpacket[48:plen], packet[48:plen])
 			} else { // UDP (17) and everything else
 				// for linux
 				returnpacket[40] = 0x01 // Destination Unreachable
 				returnpacket[41] = 0x04 // Port unreachable
+				copy(returnpacket[48:48+plen], packet)
 			}
 			// id and sequence number
 			copy(returnpacket[44:48], packet[44:48])
@@ -195,9 +197,8 @@ func main() {
 
 			// "Reserved"
 			copy(returnpacket[44:48], []byte{0, 0, 0, 0})
+			copy(returnpacket[48:48+plen], packet)
 		}
-
-		copy(returnpacket[48:48+plen], packet)
 
 		// Oh GOD now here comes a strange CRC dance
 		src := net.IP(returnpacket[8 : 8+16])
